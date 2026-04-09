@@ -1,4 +1,5 @@
 import { PawPrint, MapPin, Phone, Clock } from "lucide-react";
+import Link from "next/link";
 import { SITE_CONFIG, NAV_LINKS } from "@/lib/constants";
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 
@@ -78,13 +79,33 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-gray-400 text-sm">
-            © {new Date().getFullYear()} Veterinaria Paraná. Todos los derechos reservados.
-          </p>
-          <p className="text-gray-500 text-xs">
-            Dirigida por Dra. Teresita Mazlemian y Dr. Osvaldo González
-          </p>
+        <div className="mt-12 pt-8 border-t border-white/10 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-2 text-left">
+            <p className="text-gray-400 text-sm">
+              © {new Date().getFullYear()} Veterinaria Paraná. Todos los derechos reservados.
+            </p>
+            <p className="text-gray-500 text-xs">
+              Dirigida por Dra. Teresita Mazlemian y Dr. Osvaldo González
+            </p>
+            <Link
+              href="/terminos-y-condiciones"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-gray-400 transition-colors hover:text-white"
+            >
+              Términos y condiciones
+            </Link>
+          </div>
+
+          <a
+            href="https://www.febia.com.ar/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-gray-400 transition-colors hover:text-white sm:self-center sm:text-right"
+          >
+            Sitio web creado por{" "}
+            <span className="font-semibold text-[#CFE7D9]">FebIA</span>
+          </a>
         </div>
       </div>
     </footer>
