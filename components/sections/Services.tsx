@@ -80,6 +80,7 @@ export function Services() {
           {SERVICES.map((service, i) => {
             const Icon = service.icon === "Hip" ? HipIcon : iconMap[service.icon as IconName];
             const isFirst = i === 0;
+            const credential = "credential" in service ? service.credential : undefined;
             return (
               <div
                 key={service.title}
@@ -119,13 +120,13 @@ export function Services() {
                 >
                   {service.description}
                 </p>
-                {service.credential ? (
+                {credential ? (
                   <p
                     className={`mt-3 text-xs font-semibold tracking-wide ${
                       isFirst ? "text-white/70" : "text-brand"
                     }`}
                   >
-                    • {service.credential}
+                    • {credential}
                   </p>
                 ) : null}
               </div>
