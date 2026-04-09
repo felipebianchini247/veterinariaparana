@@ -17,12 +17,12 @@ export const SITE_CONFIG = {
     {
       name: "Dra. Teresita Mazlemian",
       role: "Directora Médica",
-      bio: "Especialista con amplia trayectoria en medicina y cirugía de pequeños animales. Lleva más de dos décadas dedicada al bienestar animal con rigor científico y profunda vocación.",
+      bio: "Especialista con amplia trayectoria en clínica, oncología y laboratorio. Lleva mas de 3 décadas dedicada al bienestar animal con rigor científico y profunda vocación, definiendo el estándar de la clínica.",
     },
     {
       name: "Dr. Osvaldo González",
       role: "Director Médico",
-      bio: "Referente en diagnóstico clínico y tratamientos complejos. Su compromiso con la formación continua y la atención personalizada define el estándar de la clínica.",
+      bio: "Dedicado a la cirugía general, traumatológica y oncológica. Con más de 4 décadas de dedicación continua, su compromiso con la formación y la atención personalizada define el estándar de la clínica.",
     },
   ],
   hours: [
@@ -40,7 +40,7 @@ export const SERVICES = [
   {
     title: "Cirugías",
     description:
-      "Quirófano equipado con tecnología de vanguardia. Realizamos procedimientos de alta y mediana complejidad con protocolo anestésico riguroso.",
+      "Quirófano equipado con tecnología de vanguardia. Realizamos procedimientos de alta, media y baja complejidad con protocolo anestésico riguroso.",
     icon: "Scissors",
   },
   {
@@ -52,13 +52,13 @@ export const SERVICES = [
   {
     title: "Diagnóstico por Imágenes",
     description:
-      "Ecografía, radiología digital y otros estudios para obtener diagnósticos precisos y oportunos, sin necesidad de derivaciones externas.",
+      "Ecografía, radiología digital y otros estudios para obtener diagnósticos precisos y oportunos.",
     icon: "Scan",
   },
   {
     title: "Internación",
     description:
-      "Área de internación con monitoreo constante. Tu mascota recibe atención las 24 horas en un ambiente seguro y controlado.",
+      "Área de internación con monitoreo constante de nuestros pacientes. Tu mascota recibe atención las 24 horas en un ambiente seguro y controlado.",
     icon: "BedDouble",
   },
   {
@@ -68,9 +68,15 @@ export const SERVICES = [
     icon: "Syringe",
   },
   {
-    title: "Farmacia y Petshop",
+    title: "Farmacia",
     description:
-      "Amplio stock de medicamentos, alimentos premium y productos de bienestar. Todo lo que tu mascota necesita en un solo lugar.",
+      "Amplio stock de medicamentos. Contamos con farmacia oncológica única en la zona.",
+    icon: "BadgePlus",
+  },
+  {
+    title: "Petshop",
+    description:
+      "Contamos con diversos productos para el bienestar de tu mascota, desde alimentos y accesorios hasta artículos de cuidado diario.",
     icon: "ShoppingBag",
   },
   {
@@ -78,24 +84,27 @@ export const SERVICES = [
     description:
       "Diagnóstico y tratamiento de alergias, infecciones cutáneas, otitis y patologías de piel y pelo con seguimiento especializado.",
     icon: "BadgePlus",
+    credential: "UBA",
   },
   {
     title: "Cardiología",
     description:
       "Evaluación cardiológica, control de patologías cardíacas y abordajes orientados a mejorar la calidad de vida de cada paciente.",
     icon: "Heart",
+    credential: "UBA",
   },
   {
     title: "Endocrinología",
     description:
       "Estudio y tratamiento de enfermedades hormonales como diabetes, trastornos tiroideos y otras alteraciones metabólicas.",
     icon: "Activity",
+    credential: "CONICET",
   },
   {
     title: "Traumatología",
     description:
       "Atención de lesiones óseas, articulares y musculares con diagnóstico preciso y planes de recuperación adaptados.",
-    icon: "Bone",
+    icon: "Hip",
   },
   {
     title: "Oftalmología",
@@ -167,7 +176,7 @@ export const TECH_FEATURES = [
   {
     title: "Diagnóstico por Imágenes",
     description:
-      "Ecógrafo digital y radiología digital que permiten diagnósticos precisos en el momento de la consulta, sin derivaciones.",
+      "Ecógrafo digital y radiología digital que permiten diagnósticos precisos en el momento de la consulta.",
     icon: "Monitor",
   },
   {

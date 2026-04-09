@@ -2,7 +2,6 @@ import {
   Activity,
   BadgePlus,
   BedDouble,
-  Bone,
   Brain,
   Eye,
   Heart,
@@ -20,7 +19,6 @@ const iconMap = {
   Activity,
   BadgePlus,
   BedDouble,
-  Bone,
   Brain,
   Eye,
   Heart,
@@ -33,6 +31,29 @@ const iconMap = {
 } as const;
 
 type IconName = keyof typeof iconMap;
+
+function HipIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="none">
+      <path
+        d="M10 4.5c-1.2.9-1.9 2.1-2 3.8l-.1 2.6-1.9 1.8a3 3 0 0 0-.8 2.7l.5 3.1c.2 1.4 1.4 2.5 2.8 2.5h1.4c1.2 0 2.3-.8 2.7-1.9l1-3.3c.2-.8.2-1.7-.1-2.4l-1-2.5"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M14 4.2c1.5.6 2.5 1.8 2.8 3.5l.4 2.5 1.7 1.4c1 .8 1.5 2 1.4 3.2l-.2 2.2a3 3 0 0 1-3 2.8h-1.4c-1 0-2-.6-2.6-1.5l-1.2-2"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="11" cy="4.5" r="1.5" fill="currentColor" />
+      <circle cx="15.5" cy="4.5" r="1.5" fill="currentColor" />
+    </svg>
+  );
+}
 
 export function Services() {
   return (
@@ -50,14 +71,14 @@ export function Services() {
           </h2>
           <p className="text-gray-500 text-lg max-w-2xl mx-auto">
             Desde controles preventivos hasta cirugías complejas, ofrecemos todo lo
-            que tu mascota necesita sin derivaciones externas.
+            que tu mascota necesita.
           </p>
         </div>
 
         {/* Services grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {SERVICES.map((service, i) => {
-            const Icon = iconMap[service.icon as IconName];
+            const Icon = service.icon === "Hip" ? HipIcon : iconMap[service.icon as IconName];
             const isFirst = i === 0;
             return (
               <div
@@ -98,6 +119,15 @@ export function Services() {
                 >
                   {service.description}
                 </p>
+                {service.credential ? (
+                  <p
+                    className={`mt-3 text-xs font-semibold tracking-wide ${
+                      isFirst ? "text-white/70" : "text-brand"
+                    }`}
+                  >
+                    • {service.credential}
+                  </p>
+                ) : null}
               </div>
             );
           })}

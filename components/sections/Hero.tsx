@@ -1,4 +1,4 @@
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Heart } from "lucide-react";
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 
 export function Hero() {
@@ -25,7 +25,10 @@ export function Hero() {
         <h1 className="font-heading text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.05] mb-6">
           Atención con
           <br />
-          <span className="text-purple-200">corazón</span>
+          <span className="inline-flex items-center gap-3 text-purple-200">
+            corazón
+            <Heart className="h-10 w-10 fill-current text-red-500 sm:h-12 sm:w-12 lg:h-14 lg:w-14" />
+          </span>
         </h1>
 
         {/* Subtitle */}

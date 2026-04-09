@@ -43,11 +43,6 @@ export function AboutUs() {
               </div>
 
               {/* Floating stat cards */}
-              <div className="absolute -bottom-5 -right-5 bg-white rounded-2xl shadow-lg border border-gray-100 px-5 py-4 z-10">
-                <p className="font-heading text-3xl font-bold text-brand">+2400</p>
-                <p className="text-sm text-gray-500">familias confían en nosotros</p>
-              </div>
-
               <div className="absolute -top-5 -left-5 bg-white rounded-2xl shadow-lg border border-gray-100 px-5 py-4 z-10">
                 <p className="font-heading text-3xl font-bold text-brand">~25</p>
                 <p className="text-sm text-gray-500">profesionales en tu equipo</p>
