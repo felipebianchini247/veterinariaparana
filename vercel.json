@@ -1,9 +1,10 @@
 {
-  "rewrites": [
+  "redirects": [
     {
       "source": "/",
       "has": [{ "type": "host", "value": "turnos.veterinariaparana.com.ar" }],
-      "destination": "/turnos_v1.html"
+      "destination": "/turnos_v1.html",
+      "permanent": false
     }
   ]
 }
