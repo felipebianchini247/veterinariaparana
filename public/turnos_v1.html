@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Turnos — Veterinaria</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+:root {
+  --bg: #080809;
+  --surface: #111113;
+  --surface2: #18181b;
+  --surface3: #222228;
+  --border: rgba(255,255,255,0.05);
+  --border2: rgba(255,255,255,0.09);
+  --border3: rgba(255,255,255,0.14);
+  --text: #f4f4f5;
+  --text2: #71717a;
+  --text3: #3f3f46;
+  --accent: #e4e4e7;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+#root { min-height: 100vh; }
+select, button, input { font-family: 'Inter', sans-serif; }
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 2px; }
+
+@media (max-width: 768px) {
+  .nav-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .nav-tabs::-webkit-scrollbar { display: none; }
+  .week-scroll { overflow-x: auto; }
+  .top-grid { grid-template-columns: 1fr 1fr !important; }
+  .top-grid > div:last-child { grid-column: span 2; }
+  .hours-grid { grid-template-columns: 1fr !important; }
+  .print-grid { grid-template-columns: 1fr !important; }
+  .header-inner { height: auto !important; flex-direction: column !important; align-items: flex-start !important; padding: 12px 16px !important; gap: 8px !important; }
+  .header-logo { font-size: '13px'; }
+  .main-content { padding: 18px 16px 60px !important; }
+}
+@media (max-width: 480px) {
+  .top-grid { grid-template-columns: 1fr !important; }
+  .top-grid > div:last-child { grid-column: span 1; }
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useCallback, useMemo } = React;
+
+// ── DATA ─────────────────────────────────────────────────────────────────────
+
+const P = {
+  nico:   { label:'Nicolás',  short:'Nico',   type:'Fijo',  obj:44, color:'#3b82f6', dim:'#1d3461' },
+  vero:   { label:'Verónica', short:'Vero',   type:'Fijo',  obj:44, color:'#22c55e', dim:'#14391f' },
+  diego:  { label:'Diego',    short:'Diego',  type:'Fijo',  obj:null, color:'#f59e0b', dim:'#422b07' },
+  franco: { label:'Franco',   short:'Franco', type:'Extra', obj:null, color:'#ec4899', dim:'#4a1030' },
+  diana:  { label:'Diana',    short:'Diana',  type:'Extra', obj:null, color:'#a78bfa', dim:'#2d1f5e' },
+  gladys: { label:'Gladys',   short:'Gladys', type:'Extra', obj:null, color:'#94a3b8', dim:'#1e2530' },
+};
+
+const BASE = [
+  { name:'Lunes',     sub: null, shifts:[
+    {p:'nico',  s:9,    e:17},
+    {p:'diana', s:10, e:13},
+    {p:'vero',  s:13,   e:21},
+    {p:'diego', s:17,   e:21},
+  ]},
+  { name:'Martes',    sub: null, shifts:[
+    {p:'vero',  s:9,    e:17},
+    {p:'diana', s:10, e:13},
+    {p:'nico',  s:13,   e:21},
+    {p:'diego', s:17,   e:21},
+  ]},
+  { name:'Miércoles', sub: null, shifts:[
+    {p:'nico',  s:9,    e:17},
+    {p:'diana', s:10, e:13},
+    {p:'vero',  s:13,   e:21},
+    {p:'diego', s:17,   e:21},
+  ]},
+  { name:'Jueves',    sub: null, shifts:[
+    {p:'vero',  s:9,    e:17},
+    {p:'diana', s:10, e:13},
+    {p:'nico',  s:13,   e:21},
+    {p:'diego', s:17,   e:21},
+  ]},
+  { name:'Viernes',   sub: 'Nico 4h · Diego desde las 15', shifts:[
+    {p:'nico',  s:9,    e:13},
+    {p:'gladys',s:10, e:13},
+    {p:'vero',  s:13,   e:21},
+    {p:'diego', s:15,   e:21},
+  ]},
+  { name:'Sábado',    sub: 'Nicolás libre', shifts:[
+    {p:'vero',  s:9,    e:13},
+    {p:'gladys',s:10, e:13},
+    {p:'franco',s:13,   e:21},
+    {p:'diego', s:15,   e:21},
+  ]},
+  { name:'Domingo',   sub: 'Verónica y Diego libres', shifts:[
+    {p:'nico',  s:9,    e:17},
+    {p:'gladys',s:10, e:13},
+    {p:'franco',s:13,   e:21},
+    {p:'diana', s:17,   e:21},
+  ]},
+];
+
+const FRANJAS = [
+  { s:9,  e:10, min:1 },
+  { s:10, e:13, min:2 },
+  { s:13, e:15, min:1 },
+  { s:15, e:17, min:2 },
+  { s:17, e:21, min:2 },
+];
+
+const TS = 9, TE = 21, TSPAN = 12;
+
+function fmtH(h) {
+  const hh = Math.floor(h);
+  const mm = Math.round((h - hh) * 60);
+  return `${hh}:${mm.toString().padStart(2,'0')}`;
+}
+
+function pct(s, e) {
+  return { left: ((s - TS) / TSPAN * 100) + '%', width: ((e - s) / TSPAN * 100) + '%' };
+}
+
+function computeTotals(days) {
+  const t = {}, bk = {};
+  days.forEach(d => d.shifts.forEach(sh => {
+    const h = sh.e - sh.s;
+    t[sh.p] = (t[sh.p] || 0) + h;
+    if (!bk[sh.p]) bk[sh.p] = {};
+    bk[sh.p][d.name] = (bk[sh.p][d.name] || 0) + h;
+  }));
+  return { t, bk };
+}
+
+function weakSpots(days) {
+  const out = [];
+  days.forEach(d => {
+    FRANJAS.filter(f => f.min === 2).forEach(f => {
+      const active = d.shifts.filter(s => s.s < f.e && s.e > f.s);
+      if (active.length === 2) out.push({ day: d.name, s: f.s, e: f.e });
+    });
+  });
+  const seen = new Set();
+  return out.filter(x => { const k = x.day + x.s; if (seen.has(k)) return false; seen.add(k); return true; });
+}
+
+// ── UTILS ────────────────────────────────────────────────────────────────────
+
+const DOW = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+
+function useNow() {
+  const [now, setNow] = useState(new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 15000);
+    return () => clearInterval(id);
+  }, []);
+  return now;
+}
+
+// ── DESIGN TOKENS ────────────────────────────────────────────────────────────
+
+const css = {
+  surface: { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px' },
+  surface2: { background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: '10px' },
+  mono: { fontFamily: "'JetBrains Mono', monospace" },
+  label: { fontSize: '10px', fontWeight: 500, letterSpacing: '.08em', textTransform: 'uppercase', color: 'var(--text3)' },
+};
+
+// ── TAG COMPONENT ────────────────────────────────────────────────────────────
+
+function Tag({ k, dim, onClick, size = 'md' }) {
+  const person = P[k];
+  const pad = size === 'sm' ? '2px 7px' : '4px 10px';
+  const fs = size === 'sm' ? '11px' : '12px';
+  return (
+    <span
+      onClick={onClick}
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: '5px',
+        padding: pad, borderRadius: '6px', fontSize: fs, fontWeight: 500,
+        background: dim ? 'var(--surface3)' : person.dim,
+        color: dim ? 'var(--text3)' : person.color,
+        border: `1px solid ${dim ? 'transparent' : person.color + '30'}`,
+        cursor: onClick ? 'pointer' : 'default',
+        transition: 'all .15s', whiteSpace: 'nowrap',
+        opacity: dim === 'very' ? 0.25 : 1,
+      }}
+    >
+      <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: dim ? 'var(--text3)' : person.color, flexShrink: 0 }} />
+      {person.short}
+    </span>
+  );
+}
+
+// ── TIMELINE BAR ─────────────────────────────────────────────────────────────
+
+function TLBar({ sh, dim, onClick, showLabel = true }) {
+  const { left, width } = pct(sh.s, sh.e);
+  return (
+    <div
+      onClick={onClick}
+      style={{
+        position: 'absolute', top: 0, height: '100%',
+        left, width,
+        background: dim ? 'var(--surface3)' : P[sh.p].color + '22',
+        borderLeft: `2px solid ${dim ? 'var(--border2)' : P[sh.p].color}`,
+        display: 'flex', alignItems: 'center', padding: '0 8px',
+        cursor: onClick ? 'pointer' : 'default',
+        transition: 'all .2s', overflow: 'hidden',
+      }}
+    >
+      {showLabel && (
+        <span style={{ fontSize: '11px', fontWeight: 500, color: dim ? 'var(--text3)' : P[sh.p].color, whiteSpace: 'nowrap' }}>
+          {P[sh.p].short} {fmtH(sh.s)}–{fmtH(sh.e)}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function TimelineAxis() {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', ...css.mono, fontSize: '10px', color: 'var(--text3)', marginBottom: '5px', padding: '0 1px' }}>
+      {[9,11,13,15,17,19,21].map(h => <span key={h}>{h}:00</span>)}
+    </div>
+  );
+}
+
+function TimelineGrid({ style }) {
+  return (
+    <>
+      {[11,13,15,17,19].map(h => (
+        <div key={h} style={{ position: 'absolute', top: 0, height: '100%', width: '1px', background: 'var(--border)', left: ((h - TS) / TSPAN * 100) + '%', pointerEvents: 'none' }} />
+      ))}
+    </>
+  );
+}
+
+// ── NOW TAB ───────────────────────────────────────────────────────────────────
+
+function CopyLinkButton() {
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    try {
+      navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch(e) {}
+  };
+  return (
+    <div onClick={copy} style={{ display:'flex', alignItems:'center', gap:'6px', padding:'5px 10px', borderRadius:'6px', background: copied ? '#22c55e15' : 'var(--surface3)', border:`1px solid ${copied ? '#22c55e40' : 'var(--border2)'}`, cursor:'pointer', fontSize:'11px', fontWeight:500, color: copied ? '#22c55e' : 'var(--text2)', transition:'all .2s', userSelect:'none', marginTop:'6px' }}>
+      {copied ? '✓ Link copiado' : '↗ Copiar link para compartir'}
+    </div>
+  );
+}
+
+function NowTab({ days, diegoLibre, setDiegoLibre }) {
+  const now = useNow();
+  const h = now.getHours() + now.getMinutes() / 60;
+  const todayName = DOW[now.getDay()];
+  const today = days.find(d => d.name === todayName);
+  const active = today ? today.shifts.filter(s => s.s <= h && s.e > h) : [];
+  const next = today ? today.shifts.filter(s => s.s > h).sort((a,b) => a.s - b.s)[0] : null;
+  const isOpen = h >= 9 && h < 21;
+  const nowPct = Math.min(100, Math.max(0, (h - TS) / TSPAN * 100));
+  const timeStr = now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      {/* Top row */}
+      <div className='top-grid' style={{ display: 'grid', gridTemplateColumns: 'auto 1fr 1fr auto', gap: '12px', alignItems: 'stretch' }}>
+
+        {/* Clock */}
+        <div style={{ ...css.surface, padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '12px', minWidth: '150px' }}>
+          <div style={{ ...css.label }}>ahora</div>
+          <div style={{ ...css.mono, fontSize: '40px', fontWeight: 300, letterSpacing: '-.02em', lineHeight: 1, color: 'var(--text)' }}>{timeStr}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: isOpen ? '#22c55e' : '#f59e0b', boxShadow: isOpen ? '0 0 6px #22c55e' : '0 0 6px #f59e0b' }} />
+            <span style={{ fontSize: '12px', color: isOpen ? '#22c55e' : '#f59e0b', fontWeight: 500 }}>{todayName} · {isOpen ? 'abierto' : 'fuera de horario'}</span>
+          </div>
+        </div>
+
+        {/* Working now */}
+        <div style={{ ...css.surface, padding: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={css.label}>trabajando ahora</div>
+          {active.length === 0 ? (
+            <div style={{ color: 'var(--text3)', fontSize: '13px', marginTop: '4px' }}>Nadie en este momento</div>
+          ) : active.map(s => (
+            <div key={s.p} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: P[s.p].dim, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 600, color: P[s.p].color }}>{P[s.p].short.slice(0,2)}</div>
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: 500 }}>{P[s.p].label}</div>
+                <div style={{ ...css.mono, fontSize: '11px', color: 'var(--text2)' }}>sale a las {fmtH(s.e)}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Next in */}
+        <div style={{ ...css.surface, padding: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={css.label}>próximo ingreso</div>
+          {next ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: P[next.p].dim, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 600, color: P[next.p].color }}>{P[next.p].short.slice(0,2)}</div>
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: 500 }}>{P[next.p].label}</div>
+                <div style={{ ...css.mono, fontSize: '11px', color: 'var(--text2)' }}>entra a las {fmtH(next.s)}</div>
+              </div>
+            </div>
+          ) : (
+            <div style={{ color: 'var(--text3)', fontSize: '13px', marginTop: '4px' }}>No hay más entradas hoy</div>
+          )}
+        </div>
+
+        {/* Diego toggle */}
+        <div style={{ ...css.surface, padding: '20px', display: 'flex', flexDirection: 'column', gap: '10px', minWidth: '180px' }}>
+          <div style={css.label}>sábado libre Diego</div>
+          <div style={{ fontSize: '12px', color: 'var(--text2)', lineHeight: 1.5 }}>Activá si Diego toma su día libre mensual</div>
+          <div
+            onClick={() => setDiegoLibre(!diegoLibre)}
+            style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', marginTop: 'auto', userSelect: 'none' }}
+          >
+            <div style={{ width: '38px', height: '22px', borderRadius: '11px', background: diegoLibre ? P.diego.dim : 'var(--surface3)', border: `1px solid ${diegoLibre ? P.diego.color + '60' : 'var(--border2)'}`, position: 'relative', transition: 'all .2s', flexShrink: 0 }}>
+              <div style={{ position: 'absolute', top: '3px', left: diegoLibre ? '18px' : '3px', width: '14px', height: '14px', borderRadius: '50%', background: diegoLibre ? P.diego.color : 'var(--text3)', transition: 'all .2s' }} />
+            </div>
+            <span style={{ fontSize: '12px', fontWeight: 500, color: diegoLibre ? P.diego.color : 'var(--text2)' }}>{diegoLibre ? 'Libre' : 'Trabaja'}</span>
+          </div>
+          {diegoLibre && (
+            <CopyLinkButton />
+          )}
+        </div>
+      </div>
+
+      {/* Diego libre alert */}
+      {diegoLibre && (
+        <div style={{ display:'flex', alignItems:'flex-start', gap:'14px', padding:'14px 18px', background:'#f59e0b0a', border:'1px solid #f59e0b30', borderRadius:'10px' }}>
+          <div style={{ width:'32px', height:'32px', borderRadius:'8px', background:'#f59e0b20', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, fontSize:'15px' }}>!</div>
+          <div style={{ flex:1 }}>
+            <div style={{ fontSize:'13px', fontWeight:500, color:'#f59e0b', marginBottom:'4px' }}>Diego libre este sábado — el bloque 15:00–21:00 queda con 1 sola persona</div>
+            <div style={{ fontSize:'12px', color:'var(--text2)', marginBottom:'10px' }}>Estos no trabajan ese sábado y podrían cubrir:</div>
+            <div style={{ display:'flex', gap:'6px', flexWrap:'wrap' }}>
+              {['nico','diana','gladys'].map(k => (
+                <div key={k} style={{ display:'inline-flex', alignItems:'center', gap:'6px', padding:'5px 12px', borderRadius:'6px', fontSize:'12px', fontWeight:500, background:P[k].dim, color:P[k].color, border:`1px solid ${P[k].color}30` }}>
+                  <span style={{ width:'5px', height:'5px', borderRadius:'50%', background:P[k].color, display:'inline-block', flexShrink:0 }} />
+                  {P[k].label}
+                  <span style={{ fontSize:'10px', opacity:.6 }}>{P[k].type}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Today timeline */}
+      {today && (
+        <div style={{ ...css.surface, padding: '20px' }}>
+          <div style={{ ...css.label, marginBottom: '14px' }}>línea de tiempo — {todayName}</div>
+          <TimelineAxis />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', position: 'relative' }}>
+            {today.shifts.map(sh => (
+              <div key={sh.p} style={{ position: 'relative', height: '32px', background: 'var(--surface2)', borderRadius: '6px', overflow: 'hidden' }}>
+                <TimelineGrid />
+                <TLBar sh={sh} />
+              </div>
+            ))}
+            {/* Now line */}
+            {isOpen && (
+              <div style={{ position: 'absolute', top: 0, bottom: 0, left: nowPct + '%', width: '1px', background: '#ef4444', pointerEvents: 'none', zIndex: 10 }}>
+                <div style={{ position: 'absolute', top: '-1px', left: '-3px', width: '7px', height: '7px', borderRadius: '50%', background: '#ef4444' }} />
+              </div>
+            )}
+          </div>
+          {isOpen && <div style={{ ...css.mono, fontSize: '10px', color: '#ef444488', marginTop: '8px' }}>— línea roja = ahora ({timeStr})</div>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── WEEK TAB ──────────────────────────────────────────────────────────────────
+
+function WeekTab({ days, sel, setSel }) {
+  return (
+    <div>
+      <PeoplePills sel={sel} setSel={setSel} />
+      <div className='week-scroll' style={{ overflowX: 'auto', ...css.surface }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '700px' }}>
+          <thead>
+            <tr style={{ borderBottom: '1px solid var(--border2)' }}>
+              <th style={{ background: 'var(--surface2)', padding: '10px 14px', textAlign: 'left', ...css.label, width: '100px' }}>Día</th>
+              {[{l:'9:00–10:00',m:1},{l:'10:00–13:00',m:2},{l:'13:00–15:00',m:1},{l:'15:00–17:00',m:2},{l:'17:00–21:00',m:2}].map(f => (
+                <th key={f.l} style={{ background: 'var(--surface2)', padding: '10px 14px', textAlign: 'left', ...css.label }}>
+                  {f.l}
+                  <span style={{ display: 'block', fontSize: '10px', fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: 'var(--text3)', marginTop: '1px' }}>mín. {f.m} persona{f.m>1?'s':''}</span>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {days.map((day, di) => (
+              <tr key={day.name} style={{ borderBottom: '1px solid var(--border)' }}>
+                <td style={{ padding: '12px 14px', verticalAlign: 'top' }}>
+                  <div style={{ fontWeight: 500, fontSize: '13px' }}>{day.name}</div>
+                  {day.sub && <div style={{ ...css.mono, fontSize: '10px', color: 'var(--text3)', marginTop: '2px', lineHeight: 1.4 }}>{day.sub}</div>}
+                </td>
+                {FRANJAS.map(f => {
+                  const active = day.shifts.filter(s => s.s < f.e && s.e > f.s);
+                  const ok = active.length >= f.min;
+                  return (
+                    <td key={f.s} style={{ padding: '12px 14px', verticalAlign: 'top' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', marginBottom: '6px' }}>
+                        {active.map(s => (
+                          <div key={s.p} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <Tag k={s.p} dim={sel && sel !== s.p ? 'very' : false} onClick={() => setSel(sel === s.p ? null : s.p)} />
+                            <span style={{ ...css.mono, fontSize: '10px', color: sel && sel !== s.p ? 'var(--text3)' : 'var(--text2)', transition: 'color .2s' }}>{fmtH(s.s)}–{fmtH(s.e)}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{ ...css.mono, fontSize: '10px', color: ok ? '#22c55e60' : '#ef444480', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <span style={{ fontSize: '8px' }}>{ok ? '●' : '●'}</span>
+                        {active.length} persona{active.length !== 1 ? 's' : ''}
+                      </div>
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// ── DAILY TAB ─────────────────────────────────────────────────────────────────
+
+function DailyTab({ days, sel, setSel }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      <PeoplePills sel={sel} setSel={setSel} />
+      {days.map(day => (
+        <div key={day.name} style={css.surface}>
+          <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ fontSize: '15px', fontWeight: 500 }}>{day.name}</span>
+            {day.sub && <span style={{ ...css.mono, fontSize: '10px', color: 'var(--text3)' }}>{day.sub}</span>}
+            <div style={{ marginLeft: 'auto', display: 'flex', gap: '4px' }}>
+              {day.shifts.map(s => (
+                <div key={s.p} onClick={() => setSel(sel === s.p ? null : s.p)} style={{ width: '6px', height: '6px', borderRadius: '50%', background: sel && sel !== s.p ? 'var(--surface3)' : P[s.p].color, cursor: 'pointer', transition: 'all .15s' }} />
+              ))}
+            </div>
+          </div>
+          <div style={{ padding: '14px 18px' }}>
+            <TimelineAxis />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '12px' }}>
+              {day.shifts.map(sh => (
+                <div key={sh.p} style={{ position: 'relative', height: '30px', background: 'var(--surface2)', borderRadius: '5px', overflow: 'hidden', cursor: 'pointer' }} onClick={() => setSel(sel === sh.p ? null : sh.p)}>
+                  <TimelineGrid />
+                  <TLBar sh={sh} dim={sel && sel !== sh.p} onClick={() => setSel(sel === sh.p ? null : sh.p)} />
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              {day.shifts.map(sh => (
+                <div key={sh.p} onClick={() => setSel(sel === sh.p ? null : sh.p)}
+                  style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '6px 10px', borderRadius: '6px', background: 'var(--surface2)', cursor: 'pointer', opacity: sel && sel !== sh.p ? 0.25 : 1, transition: 'opacity .2s' }}>
+                  <Tag k={sh.p} size="sm" />
+                  <span style={{ ...css.mono, fontSize: '11px', color: 'var(--text2)' }}>{fmtH(sh.s)} → {fmtH(sh.e)}</span>
+                  <span style={{ marginLeft: 'auto', ...css.mono, fontSize: '11px', color: 'var(--text3)' }}>{sh.e - sh.s}h</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── HOURS TAB ─────────────────────────────────────────────────────────────────
+
+function HoursTab({ days, sel, setSel }) {
+  const { t, bk } = useMemo(() => computeTotals(days), [days]);
+  return (
+    <div className='hours-grid' style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '10px' }}>
+      {Object.entries(P).map(([k, p]) => {
+        const total = t[k] || 0;
+        const breakdown = bk[k] || {};
+        const maxH = Math.max(...Object.values(breakdown), 1);
+        const pctFill = p.obj ? Math.min(100, Math.round(total / p.obj * 100)) : 100;
+        const isSelected = sel === k;
+        const isDim = sel && !isSelected;
+        return (
+          <div key={k} onClick={() => setSel(isSelected ? null : k)}
+            style={{ ...css.surface, padding: '18px', cursor: 'pointer', opacity: isDim ? 0.3 : 1, transition: 'all .2s', borderColor: isSelected ? p.color + '40' : 'var(--border)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+              <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: p.dim, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 600, color: p.color }}>
+                {p.label.slice(0, 2).toUpperCase()}
+              </div>
+              <div>
+                <div style={{ fontSize: '14px', fontWeight: 500 }}>{p.label}</div>
+                <div style={{ fontSize: '11px', color: 'var(--text3)', marginTop: '1px' }}>{p.type}</div>
+              </div>
+              <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
+                <div style={{ ...css.mono, fontSize: '28px', fontWeight: 300, letterSpacing: '-.02em', lineHeight: 1, color: p.color }}>{total}</div>
+                <div style={{ ...css.mono, fontSize: '10px', color: 'var(--text3)' }}>horas</div>
+              </div>
+            </div>
+
+            {p.obj && (
+              <div style={{ marginBottom: '14px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', ...css.mono, fontSize: '10px', color: 'var(--text3)', marginBottom: '5px' }}>
+                  <span>objetivo {p.obj}h</span>
+                  <span style={{ color: total >= p.obj ? '#22c55e' : p.color }}>{pctFill}%</span>
+                </div>
+                <div style={{ height: '3px', background: 'var(--surface3)', borderRadius: '2px', overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: pctFill + '%', background: total >= p.obj ? '#22c55e' : p.color, borderRadius: '2px', transition: 'width .6s' }} />
+                </div>
+              </div>
+            )}
+
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
+              {days.map(d => {
+                const h = breakdown[d.name];
+                if (!h) return null;
+                return (
+                  <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '11px', color: 'var(--text2)', minWidth: '76px' }}>{d.name}</span>
+                    <div style={{ flex: 1, height: '3px', background: 'var(--surface3)', borderRadius: '2px', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: Math.round(h / maxH * 100) + '%', background: p.color, borderRadius: '2px' }} />
+                    </div>
+                    <span style={{ ...css.mono, fontSize: '10px', color: 'var(--text3)', minWidth: '22px', textAlign: 'right' }}>{h}h</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+
+// ── PRINT TAB ─────────────────────────────────────────────────────────────────
+
+function PrintTab({ days }) {
+  const { t, bk } = useMemo(() => computeTotals(days), [days]);
+  return (
+    <div>
+      <div style={{ fontSize: '12px', color: 'var(--text3)', marginBottom: '14px' }}>Resumen individual para compartir o imprimir.</div>
+      <div className='print-grid' style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '10px' }}>
+        {Object.entries(P).map(([k, p]) => {
+          const breakdown = bk[k] || {};
+          if (!Object.keys(breakdown).length) return null;
+          return (
+            <div key={k} style={{ ...css.surface, overflow: 'hidden' }}>
+              <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border)', background: p.dim, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: p.color + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 600, color: p.color }}>
+                  {p.label.slice(0,2).toUpperCase()}
+                </div>
+                <div>
+                  <div style={{ fontSize: '14px', fontWeight: 500, color: p.color }}>{p.label}</div>
+                  <div style={{ ...css.mono, fontSize: '10px', color: p.color + '80', marginTop: '1px' }}>{p.type} · {t[k] || 0}h / semana</div>
+                </div>
+              </div>
+              <div style={{ padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                {days.map(d => {
+                  const sh = d.shifts.find(s => s.p === k);
+                  if (!sh) return null;
+                  return (
+                    <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 10px', borderRadius: '6px', background: 'var(--surface2)' }}>
+                      <span style={{ fontSize: '12px', fontWeight: 500, minWidth: '80px' }}>{d.name}</span>
+                      <span style={{ ...css.mono, fontSize: '11px', color: 'var(--text2)' }}>{fmtH(sh.s)}–{fmtH(sh.e)}</span>
+                      <span style={{ marginLeft: 'auto', ...css.mono, fontSize: '10px', color: 'var(--text3)' }}>{sh.e - sh.s}h</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── PEOPLE PILLS ─────────────────────────────────────────────────────────────
+
+function PeoplePills({ sel, setSel }) {
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '14px' }}>
+      {Object.entries(P).map(([k, p]) => (
+        <div key={k} onClick={() => setSel(sel === k ? null : k)}
+          style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 500, cursor: 'pointer', transition: 'all .15s', userSelect: 'none',
+            background: p.dim,
+            color: p.color,
+            border: `1px solid ${sel === k ? p.color + '60' : p.color + '25'}`,
+            opacity: sel && sel !== k ? 0.3 : 1,
+            transform: sel === k ? 'scale(1.05)' : 'scale(1)',
+          }}>
+          <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: p.color }} />
+          {p.label}
+          <span style={{ fontSize: '10px', opacity: .6 }}>{p.type}</span>
+        </div>
+      ))}
+      {sel && (
+        <div onClick={() => setSel(null)} style={{ display: 'flex', alignItems: 'center', padding: '5px 12px', borderRadius: '20px', fontSize: '12px', color: 'var(--text3)', background: 'transparent', border: '1px solid var(--border)', cursor: 'pointer' }}>
+          ✕
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── APP ────────────────────────────────────────────────────────────────────────
+
+const TABS = [
+  { id: 'now',    label: 'Ahora' },
+  { id: 'week',   label: 'Semana' },
+  { id: 'daily',  label: 'Por día' },
+  { id: 'hours',  label: 'Horas' },
+  { id: 'print',  label: 'Por persona' },
+];
+
+function App() {
+  const [tab, setTab] = useState('now');
+  const [sel, setSel] = useState(null);
+  const [diegoLibre, setDiegoLibre] = useState(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.has('diegoLibre')) return params.get('diegoLibre') === 'true';
+      return localStorage.getItem('diegoLibre') === 'true';
+    } catch(e) { return false; }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem('diegoLibre', diegoLibre);
+      const params = new URLSearchParams(window.location.search);
+      if (diegoLibre) { params.set('diegoLibre', 'true'); } else { params.delete('diegoLibre'); }
+      const newUrl = params.toString() ? window.location.pathname + '?' + params.toString() : window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+    } catch(e) {}
+  }, [diegoLibre]);
+
+  const days = useMemo(() =>
+    diegoLibre
+      ? BASE.map(d => d.name === 'Sábado' ? { ...d, sub: 'Nicolás libre · Diego libre (activo)', shifts: d.shifts.filter(s => s.p !== 'diego') } : d)
+      : BASE,
+    [diegoLibre]
+  );
+
+  return (
+    <div style={{ minHeight: '100vh' }}>
+      {/* Header */}
+      <div className='header-inner' style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(8,8,9,.95)', backdropFilter: 'blur(20px)', borderBottom: '1px solid var(--border)', padding: '0 24px', height: '52px', display: 'flex', alignItems: 'center', gap: '20px' }}>
+        <div className='header-logo' style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--text3)', whiteSpace: 'nowrap' }}>
+          Veterinaria · Turnos
+        </div>
+        <div className='nav-tabs' style={{ display: 'flex', gap: '1px', background: 'var(--surface2)', borderRadius: '8px', padding: '3px', border: '1px solid var(--border)', overflowX: 'auto' }}>
+          {TABS.map(t => (
+            <button key={t.id} onClick={() => setTab(t.id)}
+              style={{ background: tab === t.id ? 'var(--surface3)' : 'transparent', border: tab === t.id ? '1px solid var(--border2)' : '1px solid transparent', color: tab === t.id ? 'var(--text)' : 'var(--text3)', fontFamily: 'Inter, sans-serif', fontSize: '12px', fontWeight: 500, padding: '5px 12px', borderRadius: '6px', cursor: 'pointer', transition: 'all .12s', whiteSpace: 'nowrap' }}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+        {sel && (
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 12px', background: P[sel].dim, border: `1px solid ${P[sel].color}30`, borderRadius: '20px' }}>
+            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: P[sel].color }} />
+            <span style={{ fontSize: '12px', fontWeight: 500, color: P[sel].color }}>{P[sel].label}</span>
+            <button onClick={() => setSel(null)} style={{ background: 'transparent', border: 'none', color: P[sel].color + '80', cursor: 'pointer', fontSize: '12px', marginLeft: '4px' }}>✕</button>
+          </div>
+        )}
+      </div>
+
+      {/* Content */}
+      <div className='main-content' style={{ maxWidth: '1080px', margin: '0 auto', padding: '28px 24px 80px' }}>
+        <div style={{ marginBottom: '24px' }}>
+          <div style={{ fontSize: '22px', fontWeight: 300, letterSpacing: '-.02em' }}>{TABS.find(t => t.id === tab)?.label}</div>
+        </div>
+        {tab === 'now'    && <NowTab    days={days} diegoLibre={diegoLibre} setDiegoLibre={setDiegoLibre} />}
+        {tab === 'week'   && <WeekTab   days={days} sel={sel} setSel={setSel} />}
+        {tab === 'daily'  && <DailyTab  days={days} sel={sel} setSel={setSel} />}
+        {tab === 'hours'  && <HoursTab  days={days} sel={sel} setSel={setSel} />}
+        {tab === 'print'  && <PrintTab  days={days} />}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
