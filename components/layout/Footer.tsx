@@ -1,4 +1,5 @@
-import { PawPrint, MapPin, Phone, Clock } from "lucide-react";
+import Image from "next/image";
+import { MapPin, Phone, Clock } from "lucide-react";
 import Link from "next/link";
 import { SITE_CONFIG, NAV_LINKS } from "@/lib/constants";
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
@@ -11,8 +12,14 @@ export function Footer() {
           {/* Brand */}
           <div className="lg:col-span-2">
             <div className="flex items-center gap-2.5 mb-4">
-              <div className="w-9 h-9 bg-brand-light rounded-xl flex items-center justify-center">
-                <PawPrint className="h-5 w-5 text-white" />
+              <div className="relative h-10 w-10 overflow-hidden rounded-full">
+                <Image
+                  src="/veterinariaParana3.png"
+                  alt="Logo de Veterinaria Paraná"
+                  fill
+                  className="object-cover"
+                  sizes="40px"
+                />
               </div>
               <div>
                 <p className="font-heading font-bold text-xl">Veterinaria Paraná</p>

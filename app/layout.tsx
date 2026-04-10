@@ -18,6 +18,11 @@ export const metadata: Metadata = {
   title: "Veterinaria Paraná | Centro Veterinario en Villa Adelina",
   description:
     "Centro veterinario de referencia en Villa Adelina, Buenos Aires. Cirugías, oncología, diagnóstico por imágenes, internación y más. Más de 2400 reseñas positivas.",
+  icons: {
+    icon: "/veterinariaParana3.png",
+    shortcut: "/veterinariaParana3.png",
+    apple: "/veterinariaParana3.png",
+  },
   keywords: [
     "veterinaria villa adelina",
     "veterinario villa adelina",

@@ -1,7 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useEffect } from "react";
-import { Menu, X, PawPrint } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { NAV_LINKS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -30,13 +31,19 @@ export function Header() {
         <div className="flex items-center justify-between h-18 py-4">
           {/* Logo */}
           <a href="#" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 bg-brand rounded-xl flex items-center justify-center shadow-sm transition-transform group-hover:scale-105">
-              <PawPrint className="h-5 w-5 text-white" />
+            <div className="relative h-10 w-10 overflow-hidden rounded-full shadow-sm transition-transform group-hover:scale-105">
+              <Image
+                src="/veterinariaParana3.png"
+                alt="Logo de Veterinaria Paraná"
+                fill
+                className="object-cover"
+                sizes="40px"
+              />
             </div>
             <div className="flex flex-col leading-tight">
               <span
                 className={cn(
-                  "font-heading font-bold text-lg tracking-tight transition-colors duration-200",
+                  "font-heading font-bold text-[1.55rem] tracking-tight transition-colors duration-200 sm:text-[1.7rem]",
                   scrolled ? "text-gray-900" : "text-white"
                 )}
               >
@@ -44,7 +51,7 @@ export function Header() {
               </span>
               <span
                 className={cn(
-                  "hidden text-xs font-medium tracking-wide sm:block transition-colors duration-200",
+                  "hidden text-[0.7rem] font-medium tracking-wide sm:block transition-colors duration-200",
                   scrolled ? "text-brand" : "text-white/75"
                 )}
               >
